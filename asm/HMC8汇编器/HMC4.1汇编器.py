@@ -191,7 +191,7 @@ def save_and_compile():#文件保存并编译函数
                 asm.append(f'{addr} :  {(orders[match.group(1)]<<18)+(num<<8)+(r1<<4)+r2};')
             elif match.group(1)=='NOP':
                 asm.append(f'{addr} :  {orders[match.group(1)] << 18};')
-            elif match.group(1) in ['ADD','SUB','AND','OR','XOR','SLL','SRL','SLT','BEQ','BNE','BLT','BGE','BLTU','BGEU','SRA','SRL']:
+            elif match.group(1) in ['ADD','SUB','AND','OR','XOR','SLA','SLL','SRL','SLT','BEQ','BNE','BLT','BGE','BLTU','BGEU','SRA','SRL']:
                 #三操作数指令
                 mess=re.match(pattern_r,i)
                 if reg_check(mess.group(1),mess.group(2),mess.group(3),line=line) ==False:

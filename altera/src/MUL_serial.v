@@ -2,12 +2,16 @@ module MUL_serial (
     clk,res_n,a,b,out,en,finish
 );
 	// Fmax 66MHZ
-    input clk/* synthesis keep, preserve, noextract */;
-    input res_n/* synthesis keep, preserve, noextract */;
-    input en/* synthesis keep, preserve, noextract */;
+    // 【时序优化】端口上不再加 keep/preserve/noextract：
+    // 端口上的 noextract 会让综合器为 clk 单独插缓冲并提升成独立全局时钟（GCLK1），
+    // 与主时钟树插入延迟差约 1.2ns，白吃掉每个周期的时序余量。
+    // 内部寄存器（a_reg/b_reg/state/out/mid）上的属性全部保留，串行结构不会被改写。
+    input clk;
+    input res_n;
+    input en;
 
-    input [15:0] a/* synthesis keep, preserve, noextract */;
-    input [15:0] b/* synthesis keep, preserve, noextract */;
+    input [15:0] a;
+    input [15:0] b;
 
     output reg [31:0] out/* synthesis keep, preserve, noextract */;
     output reg finish/* synthesis keep, preserve, noextract */;
