@@ -32,9 +32,9 @@ orders={#指令集
     'ANDI':31,#立即数与
     'SRAI':32,#立即数算数右移
     'SRA':33, #算数右移
-    'SLA':34  #算数左移
+    'SRL':34  #算数左移
 }
-pattern_order=r"(BGEU|BLTU|NOP|SRAI|ADDI|BNE|SLTI|SLLI|SRLI|ADD|BEQ|SUB|SLL|SRL|ANDI|ORI|XORI|JALR|JAL|BLT|BGE|LB|SLA|LSR|ESR|IN|OUT|MUL|DIV|XOR|OR|AND|SRA)"
+pattern_order=r"(BGEU|BLTU|NOP|SRAI|ADDI|BNE|SLTI|SLLI|SRLI|ADD|BEQ|SUB|SLL|SRL|ANDI|ORI|XORI|SLL|SRL|JALR|JAL|BLT|BGE|BLTU|BGEU|LB|LSR|ESR|IN|OUT|MUL|DIV|XOR|OR|AND|SRA|SRL|SLT)+"
 pattern_regs=r"\s+(R15|R14|R13|R12|R11|R10|R9|R8|R7|R6|R5|R4|R3|R2|R1|R0)+"#寄存器格式
 pattern_addr=r"(@\w+)+"#跳转地址格式
 pattern_num=r"(\s+\d+U|\s+-\d+|\s+\d+|\s+\d+u)+"#立即数格式

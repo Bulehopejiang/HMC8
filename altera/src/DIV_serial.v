@@ -2,13 +2,12 @@ module DIV_serial (
     clk,res_n,a,b,out,en,finish
 );
 
-    // 【时序优化】端口上不再加 keep/preserve/noextract（原因见 MUL_serial.v 同位置注释）
-    input clk;
-    input res_n;
-    input en;
+    input clk/* synthesis keep, preserve, noextract */;
+    input res_n/* synthesis keep, preserve, noextract */;
+    input en/* synthesis keep, preserve, noextract */;
 
-    input [15:0] a;
-    input [15:0] b;
+    input [15:0] a/* synthesis keep, preserve, noextract */;
+    input [15:0] b/* synthesis keep, preserve, noextract */;
 
     output reg [31:0] out/* synthesis keep, preserve, noextract */;
     output reg finish/* synthesis keep, preserve, noextract */;

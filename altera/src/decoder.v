@@ -1,6 +1,6 @@
 module decoder (
     clk,res,PROM_out,alu_op,en,sext,imm,a_addr,b_addr,c_addr,d_addr,L_c,
-   A_sel,B_sel,L,E,ADDR_bus,g,SFR_wr,L_d
+   A_sel,B_sel,L,E,ADDR_bus,g,g_addr,SFR_wr,L_d
 );
 
     input clk,res;
@@ -8,6 +8,7 @@ module decoder (
     input en;
     input L_d;
     input [15:0] g;
+    output [3:0] g_addr;
     output reg [15:0] ADDR_bus;
     output reg sext;//符号扩展
     output reg [9:0] imm;
@@ -20,22 +21,25 @@ module decoder (
     output reg SFR_wr;
 
     reg [3:0] a_ADDR,b_ADDR,c_ADDR,d_ADDR;
+    reg [3:0] a_bypass,b_bypass,c_bypass,d_bypass;
 
-    // 【时序优化】把乘除法写回所需的寄存器字段"冻结在源头"，取代原来的地址旁路 mux。
-    //
-    // 原来的做法：a_bypass..d_bypass 再存一份字段，写回那一拍用 L_d 把地址切到旁路寄存器。
-    // 问题：L_d 由 finish 组合产生，于是 finish → 地址 mux → 寄存器堆读 mux → ALU → 写 mux
-    //       被串成一条 18ns 的长路径（实测就是最差路径）。
-    // 现在改成：译码结果本身是乘/除（alu_op==27/28）的那一拍，不推进这四个地址寄存器，
-    //       它们自然保持"乘除法指令自己"的字段直到写回结束，与旁路寄存器取值完全一致，
-    //       但地址通路上再也没有 L_d / finish 的组合依赖。
-    wire md_op    = (alu_op==6'd27)||(alu_op==6'd28);
-    wire addr_upd = en & (~md_op);
+    always @(posedge clk or negedge res) begin
+        if(!res)begin
+            a_bypass<=4'b0;
+            b_bypass<=4'b0;
+            c_bypass<=4'b0;
+            d_bypass<=4'b0;
+        end
+        else if((en==1'b1)&&(alu_op==6'd27||alu_op==6'd28))begin
+            a_bypass<=a_ADDR;b_bypass<=b_ADDR;
+            c_bypass<=c_ADDR;d_bypass<=d_ADDR;
+        end
+    end
 
-    assign a_addr=a_ADDR;
-    assign b_addr=b_ADDR;
-    assign c_addr=c_ADDR;
-    assign d_addr=d_ADDR;
+    assign a_addr=(L_d) ? a_bypass:a_ADDR;
+    assign b_addr=(L_d) ? b_bypass:b_ADDR;
+    assign c_addr=(L_d) ? c_bypass:c_ADDR;
+    assign d_addr=(L_d) ? d_bypass:d_ADDR;
 
     always @(posedge clk or negedge res) begin//地址信号生成
         if(!res)
@@ -44,8 +48,7 @@ module decoder (
             SFR_wr<=(PROM_out[23:18]==6'd23||PROM_out[23:18]==6'd24);        
     end
 
-    //【优化】原来的 assign g_addr=b_addr 与配套的 g 读口已删除：
-    //       g 与 b 恒等，寄存器堆不再单独开这个读口，HMC8.v 直接把 b 接到这里的 g 输入。
+    assign g_addr=b_addr;
     always @(posedge clk or negedge res) begin//地址信号生成
         if(!res)
             ADDR_bus<=16'b0;
@@ -102,28 +105,28 @@ module decoder (
     always @(posedge clk or negedge res) begin//d信号生成
         if(!res)
             d_ADDR<=4'b0;
-        else if(addr_upd)
+        else if(en)
             d_ADDR<=PROM_out[15:12];        
     end
 
     always @(posedge clk or negedge res) begin//c信号生成
         if(!res)
             c_ADDR<=4'b0;
-        else if(addr_upd)
+        else if(en)
             c_ADDR<=PROM_out[3:0];        
     end
 
     always @(posedge clk or negedge res) begin//a信号生成
         if(!res)
             a_ADDR<=4'b0;
-        else if(addr_upd)
+        else if(en)
             a_ADDR<=PROM_out[7:4];        
     end
 
     always @(posedge clk or negedge res) begin//b信号生成
         if(!res)
             b_ADDR<=4'b0;
-        else if(addr_upd)
+        else if(en)
             b_ADDR<=PROM_out[11:8];        
     end
 
