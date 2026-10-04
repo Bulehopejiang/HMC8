@@ -1,5 +1,6 @@
 module HMC8 (
-    clk,res,R_bus,W_bus,ADDR_bus,L,E,int_addr,out_int,SFR_wr,PC_out,L_ch
+    clk,res,R_bus,W_bus,ADDR_bus,L,E,int_addr,out_int,SFR_wr,PC_out,
+    L_ch,PC_CH
 );
     
     input clk,res;
@@ -8,6 +9,7 @@ module HMC8 (
     input [15:0] int_addr;
     output [15:0] W_bus;
     output [15:0] ADDR_bus;
+    output [15:0] PC_CH;
     output L;
     output E;
     output SFR_wr;
@@ -61,8 +63,9 @@ module HMC8 (
     end
 
     assign PC_out=PC+1'b1;
+    assign PC_CH=(!en) ? PC:(PC_add==2'b10) ? PC_val:(PC_add==2'b01) ? PC+PC_val:PC+1'b1;
 
-    assign PC_mux=(!en) ? PC:(PC_add==2'b10) ? PC_val:(PC_add==2'b01) ? PC+PC_val:(out_int) ? int_addr:PC+1'b1;
+    assign PC_mux=(!en) ? PC:(out_int) ? int_addr:(PC_add==2'b10) ? PC_val:(PC_add==2'b01) ? PC+PC_val:PC+1'b1;
 
     PROM	PROM_inst (//PROM
 	.aclr ( ~res ),

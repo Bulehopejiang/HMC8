@@ -4,7 +4,7 @@ module Timer (
 
     input clk,res,en;
     input [1:0] div_f;
-    input val;
+    input [15:0] val;
     input clr_cnt;
     output TI;
 
@@ -18,7 +18,7 @@ module Timer (
         if(!res)
             div_f_reg<=2'b0;
         else    
-            div_f_reg<=(div_f) ? 2'b0:div_f_reg+1'b1; 
+            div_f_reg<=(div_sign) ? 2'b0:div_f_reg+1'b1; 
     end
 
     assign div_sign=(div_f_reg==div_f);//同步分频信号

@@ -25,7 +25,7 @@ module HMC8_SOC_tb (
 
     initial begin
         #20;
-        repeat(100)@(posedge clk);
+        repeat(1000)@(posedge clk);
         $stop;
     end
     
