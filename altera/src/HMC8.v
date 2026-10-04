@@ -1,6 +1,6 @@
 module HMC8 (
     clk,res,R_bus,W_bus,ADDR_bus,L,E,int_addr,out_int,SFR_wr,PC_out,
-    L_ch,PC_CH
+    L_ch,PC_CH,en
 );
     
     input clk,res;
@@ -15,6 +15,7 @@ module HMC8 (
     output SFR_wr;
     output [15:0] PC_out;
     output L_ch;
+    output en;
 
     reg [15:0] PC;
     reg [23:0] PROM_out_reg;
@@ -39,7 +40,7 @@ module HMC8 (
     wire sext;
     wire [5:0] alu_op;
     wire finish;
-    wire en;
+    
     wire [9:0] imm;
 
     wire L_d;

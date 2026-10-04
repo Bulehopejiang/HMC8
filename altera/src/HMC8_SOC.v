@@ -20,6 +20,7 @@ module HMC8_SOC (
     wire i_reg_clr;
     wire i;
     wire IF;
+    wire en;
     reg i_reg;
     wire [15:0] PC_CH;
 
@@ -27,7 +28,7 @@ module HMC8_SOC (
 	.address ( ADDR_bus ),
 	.clock ( clk ),
 	.data ( W_bus ),
-	.wren ( L==1'b1&&ADDR_bus<16'd2048 ),
+	.wren ( L==1'b1&&ADDR_bus<16'd2048&&SFR_wr==1'b0 ),
 	.q ( RAM_out )
 	);
 
@@ -38,7 +39,7 @@ module HMC8_SOC (
             i_reg<=1'b0;
         else if(!IF)
             i_reg<=1'b1;
-        else
+        else if(en)
             i_reg<=i;
     end
     assign i=|I;
@@ -136,7 +137,7 @@ module HMC8_SOC (
     HMC8 HMC8_uut(
         .clk(clk),.res(res),.R_bus(R_bus),.W_bus(W_bus),.ADDR_bus(ADDR_bus),
         .L(L),.E(E),.int_addr(SFR[5]),.out_int(out_int),.SFR_wr(SFR_wr),.L_ch(L_ch),
-        .PC_out(PC_out),.PC_CH(PC_CH)
+        .PC_out(PC_out),.PC_CH(PC_CH),.en(en)
     );
 
 endmodule
