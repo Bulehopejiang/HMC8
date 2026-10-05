@@ -7,7 +7,7 @@ LB HIGH 32768 R10
 LB LOW @INT R0；装载中断服务函数地址
 LB LOW 1 R1；预先给R1装载值，便于后面的死循环
 LSR 5 R0；将中断地址装载到中断加载寄存器中
-LB LOW 60000 R0
+LB LOW 60000 R0;定时时长
 LB HIGH 60000 R0
 LSR 7 R0；给T0装载阈值
 LB LOW 2 R0
@@ -21,15 +21,18 @@ JAL @LOOP R1；死循环
 NOP
 @INT
 ESR 8 R2；将断点处的PC值保护起来
-ADDI 1 R5 R5
-BGEU R6 R5 R7
-JAL @JMP R7
-ANDI 0 R5 R5
-AND R3 R10 R7
-XORI -1 R7 R7
+ADDI 1 R5 R5；计数值变量
+BGEU R6 R5 R7；判断计数值是否记满
+NOP
+NOP
+JAL @JMP R7；未计满则直接跳出后续逻辑
+ANDI 0 R5 R5；记满了则先清零
+AND R3 R10 R7；判断R3是否要溢出了
+BEQ R11 R7 R7；
+NOP；等待R7结果
 SLLI 1 R3 R3；R3<<1
-JAL @JMP1 R7
-ORI 1 R3 R3
+JAL @JMP1 R7；溢出则低位补1
+ADDI 1 R3 R3
 @JMP1
 LSR 0 R3；R3的值输出
 @JMP
