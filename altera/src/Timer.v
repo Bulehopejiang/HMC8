@@ -36,7 +36,7 @@ module Timer (
 
     always @(posedge clk or negedge res) begin
         if(!res)
-            TI_reg<=1'b0;
+            TI_reg<=1'b1;
         else 
             TI_reg<=cnt_full_sign;
     end

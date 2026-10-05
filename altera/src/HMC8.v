@@ -2,6 +2,7 @@ module HMC8 (
     clk,res,R_bus,W_bus,ADDR_bus,L,E,int_addr,out_int,SFR_wr,PC_out,
     L_ch,PC_CH,en
 );
+    parameter ip_sel=1;//1 altera 0 al
     
     input clk,res;
     input out_int;
@@ -68,12 +69,20 @@ module HMC8 (
 
     assign PC_mux=(!en) ? PC:(out_int) ? int_addr:(PC_add==2'b10) ? PC_val:(PC_add==2'b01) ? PC+PC_val:PC+1'b1;
 
-    PROM	PROM_inst (//PROM
-	.aclr ( ~res ),
-	.address ( PC_mux ),
-	.clock ( clk ),
-	.q ( PROM_out )
-	);
+    generate
+        if(ip_sel)
+           PROM	PROM_inst (//PROM
+            .aclr ( ~res ),
+            .address ( PC_mux ),
+            .clock ( clk ),
+            .q ( PROM_out )
+            ); 
+        else
+            PROM PROM_uut( .doa(PROM_out), .addra(PC_mux), .clka(clk) );
+    endgenerate
+    
+
+	
 
     decoder decoder_uut(//译码器
         .clk(clk),.res(res),.PROM_out(PROM_out_reg),.alu_op(alu_op),
@@ -84,7 +93,7 @@ module HMC8 (
     );
 
     jmp_control jmp_control_uut(
-        .PROM_out(PROM_out),.e(e),.e_addr(e_addr),.PC_add(PC_add),
+        .PROM_out(PROM_out),.e(e!=16'b0),.e_addr(e_addr),.PC_add(PC_add),
         .PC_val(PC_val),.f(f),.f_addr(f_addr),.L_ch(L_ch)
     );
 

@@ -63,6 +63,8 @@ set_global_assignment -name EDA_TEST_BENCH_NAME HMC8_SOC_tb -section_id eda_simu
 set_global_assignment -name EDA_DESIGN_INSTANCE_NAME NA -section_id HMC8_SOC_tb
 set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME HMC8_SOC_tb -section_id HMC8_SOC_tb
 set_global_assignment -name EDA_TEST_BENCH_FILE sim/HMC8_SOC_tb.v -section_id HMC8_SOC_tb
+set_global_assignment -name VERILOG_FILE src/UART_send.v
+set_global_assignment -name VERILOG_FILE src/UART_receive.v
 set_global_assignment -name VERILOG_FILE src/Timer.v
 set_global_assignment -name VERILOG_FILE src/HMC8_SOC.v
 set_global_assignment -name SDC_FILE HMC8.out.sdc

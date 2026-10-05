@@ -62,10 +62,12 @@
 ;NOP
 ;DIV R4 R0 R2 R5
 ;特殊寄存器组访问
+；NOP
 ；LB LOW 666 R0
 ；LB HIGH 666 R0
 ；LSR 1 R0
 ；ESR 1 R1
+；LSR 0 R1
 ；内存访问
 ；LB LOW 6 R0
 ；LB LOW 666 R1
@@ -94,40 +96,72 @@
 ；ADDI -1 R1 R1
 ；JAL @LOOP R3
 ；LSR 0 R0
+；子程序测试
 ;LB LOW 666 R0
-;LB HIGH 666 R0
+;LB HIGH 666 R0；R0装载666
 ;LB LOW @FUN R1
-;LB HIGH @FUN R1
-;LB LOW 1 R5
-;JALR R1
-;ADDI 1 R0 R0
-;LSR 0 R0
+;LB HIGH @FUN R1；子程序地址装载
+;LB LOW 1 R5；预先装载1，便于后续的死循环
+;JALR R1；跳转到子程序
+;ADDI 1 R0 R0；R0++
+;LSR 0 R0;输出
 ;@LOOP
-;JAL @LOOP R5
+;JAL @LOOP R5；死循环
 ;NOP
-;@FUN
-;ADDI 1 R0 R0
-;ESR 1 R1
+;@FUN ；子程序
+;ADDI 1 R0 R0；	R++
+;ESR 1 R1;将断点保存
+;NOP；空拍等待加载完毕
 ;NOP
+;JALR R1；返回断点
+；定时器中断测试
 ;NOP
-;JALR R1
+;LB LOW @INT R0；装载中断服务函数地址
+;LB LOW 1 R1；预先给R1装载值，便于后面的死循环
+;LSR 5 R0；将中断地址装载到中断加载寄存器中
+;LB LOW 30 R0
+;LSR 7 R0；给T0装载阈值
+;LB LOW 2 R0
+;LSR 6 R0；开启T0
+;LB LOW 4 R0
+;LSR 3 R0；开启T0中断
+;LB LOW 2 R0；开总中断
+;LSR 4 R0
+;@LOOP
+;JAL @LOOP R1；死循环
+;NOP
+;@INT
+;ESR 8 R2；将断点处的PC值保护起来
+;ADDI 1 R3 R3；R3++
+;LSR 0 R3；R3的值输出
+;ANDI 0 R9 R9
+;LSR 2 R9；清除T0的中断标志位
+;ADDI 3 R9 R9
+;LSR 4 R9；更新中断
+;JALR R2；返回断点
+；串口中断测试，串口回环
+NOP
+NOP
 LB LOW @INT R0
-LB LOW 1 R1
-LSR 5 R0
-LB LOW 30 R0
-LSR 7 R0
+LB LOW 1 R1；先给R1装载1，便于后面的死循环
+LSR 5 R0；设置中断服务函数地址
 LB LOW 2 R0
-LSR 6 R0
+LSR 9 R0;开启UART0接收使能
 LB LOW 2 R0
-LSR 4 R0
+LSR 3 R0；开启UART0中断
+LB LOW 2 R0
+LSR 4 R0；开启总中断
 @LOOP
-JAL @LOOP R1
+JAL @LOOP R1；死循环
 NOP
 @INT
-ESR 8 R2
-ADDI 1 R3 R3
-LSR 0 R3
+ESR 8 R2；取出触发中断时PC的地址，保护现场
+ESR 11 R10
+LSR 10 R10；将接收到的数据装入发送寄存器
+LB LOW 3 R10
+LSR 9 R10;使能发送
 ANDI 0 R9 R9
+LSR 2 R9;清除接收中断标志位
 ADDI 2 R9 R9
-LSR 6 R9
-JALR R2
+LSR 4 R9；清除中断位，更新中断
+JALR R2；返回断点
