@@ -7,10 +7,30 @@ module HMC8_SOC_tb (
     wire [15:0] out;
     wire Tx;
     reg Rx;
+    wire [15:0] PC;
+    wire [15:0] regs [0:15];
 
     HMC8_SOC uut(
         .clk(clk),.res_n(res),.out(out),.TX(Tx),.RX(Rx)
     );
+
+    assign PC=uut.HMC8_uut.PC;
+    assign regs[0]=uut.HMC8_uut.Regs_uut.regs[0];
+    assign regs[1]=uut.HMC8_uut.Regs_uut.regs[1];
+    assign regs[2]=uut.HMC8_uut.Regs_uut.regs[2];
+    assign regs[3]=uut.HMC8_uut.Regs_uut.regs[3];
+    assign regs[4]=uut.HMC8_uut.Regs_uut.regs[4];
+    assign regs[5]=uut.HMC8_uut.Regs_uut.regs[5];
+    assign regs[6]=uut.HMC8_uut.Regs_uut.regs[6];
+    assign regs[7]=uut.HMC8_uut.Regs_uut.regs[7];
+    assign regs[8]=uut.HMC8_uut.Regs_uut.regs[8];
+    assign regs[9]=uut.HMC8_uut.Regs_uut.regs[9];
+    assign regs[10]=uut.HMC8_uut.Regs_uut.regs[10];
+    assign regs[11]=uut.HMC8_uut.Regs_uut.regs[11];
+    assign regs[12]=uut.HMC8_uut.Regs_uut.regs[12];
+    assign regs[13]=uut.HMC8_uut.Regs_uut.regs[13];
+    assign regs[14]=uut.HMC8_uut.Regs_uut.regs[14];
+    assign regs[15]=uut.HMC8_uut.Regs_uut.regs[15];
 
     initial begin
         clk=0;

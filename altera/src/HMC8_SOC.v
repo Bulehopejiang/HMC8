@@ -2,7 +2,7 @@ module HMC8_SOC (
     clk,res_n,out,TX,RX
 );
     localparam  i_num= 5;//中断源个数
-    parameter ip_sel=0;//1 altera 0 al
+    parameter ip_sel=1;//1 altera 0 al
 
     input clk,res_n;
     output [15:0] out;//输出寄存器端口
@@ -31,7 +31,7 @@ module HMC8_SOC (
     wire [7:0] Rx_data;//UART0接收到的数据
     wire TI0;//定时器0中断信号
 
-    
+
 
 	generate//RAM IP选择
     	if(ip_sel)
