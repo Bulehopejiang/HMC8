@@ -1,7 +1,7 @@
 module ALU (
     clk,res,alu_op,out_l,out_h,finish,A,B
 );
-    
+    //运算器
     input clk,res;
     input [5:0] alu_op;
     output [15:0] out_h;
@@ -18,10 +18,10 @@ module ALU (
     wire div_finish;
 
     always @(*) begin
-        if(mul_finish|div_finish)
+        if(mul_finish|div_finish)//乘除法时outl被从组合逻辑区分离出来，交由乘除法器接管
             out_l=(mul_finish) ? mul_l:div_q;
         else
-            case (alu_op)
+            case (alu_op)//组合逻辑运算区域
                 6'd1,6'd5:out_l=A+B;
                 6'd20:out_l=(A<B);
                 6'd7,6'd3:out_l=A<<B;
@@ -42,8 +42,8 @@ module ALU (
             endcase
     end
 
-    assign out_h=(mul_finish) ? mul_h:div_r;
-    assign finish=div_finish|mul_finish;
+    assign out_h=(mul_finish) ? mul_h:div_r;//高位选择逻辑
+    assign finish=div_finish|mul_finish;//乘除完成信号
 
     DIV_serial DIV_uut(//除法器
         .clk(clk),.res_n(res),.a(A),.b(B),.out({div_r,div_q}),

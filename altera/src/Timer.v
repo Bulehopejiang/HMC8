@@ -1,12 +1,12 @@
 module Timer (
     clk,res,en,val,div_f,clr_cnt,TI
 );
-
+    //定时器
     input clk,res,en;
-    input [1:0] div_f;
-    input [15:0] val;
-    input clr_cnt;
-    output TI;
+    input [1:0] div_f;//分频系数
+    input [15:0] val;//阈值
+    input clr_cnt;//清零信号
+    output TI;//溢出信号
 
     reg [15:0] cnt;
     reg [1:0] div_f_reg;
@@ -32,9 +32,9 @@ module Timer (
             cnt<=(cnt_full_sign) ? 16'b0:cnt+1'b1;
     end
     
-    assign cnt_full_sign=(cnt==val);
+    assign cnt_full_sign=(cnt==val);//溢出信号
 
-    always @(posedge clk or negedge res) begin
+    always @(posedge clk or negedge res) begin/*溢出信号整型，使之维持一个周期*/
         if(!res)
             TI_reg<=1'b1;
         else 

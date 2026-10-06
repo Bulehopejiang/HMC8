@@ -37,7 +37,7 @@ module Regs (
                 regs[i]<=16'b0;
             else if(L_d==1&&d_addr==i)
                 regs[i]<=d;
-            else if(L_c==2'b01&&c_addr==i)
+            else if(L_c==2'b01&&c_addr==i)/*半字加载*/
                 regs[i][7:0]<=c[7:0];
             else if(L_c==2'b10&&c_addr==i)
                 regs[i][15:8]<=c[7:0];
