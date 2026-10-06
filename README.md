@@ -159,6 +159,7 @@ graph LR
 
 ```asm
 ；初始化部分
+LB LOW 100 R6
 LB LOW @INT R0      ；中断服务程序入口地址
 LSR 5 R0            ；写入SFR[5]
 LB LOW 60000 R0
@@ -177,7 +178,7 @@ JAL @LOOP R1        ；死循环等中断
 @INT
 ESR 8 R2            ；取出返回地址
 ADDI 1 R5 R5        ；计数
-BGEU R6 R5 R7       ；计满100次？
+BGEU R6 R5 R7       ；计满100
 JAL @JMP R7
 ANDI 0 R5 R5
 ADDI 1 R3 R3
