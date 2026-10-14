@@ -107,16 +107,6 @@
                 </FileInfo>
             </File>
         </Verilog>
-        <ADC_FILE>
-            <File Path="IO_pin.adc">
-                <FileInfo>
-                    <Attr Name="UsedInSyn" Val="true"/>
-                    <Attr Name="UsedInP&R" Val="true"/>
-                    <Attr Name="BelongTo" Val="constraint_1"/>
-                    <Attr Name="CompileOrder" Val="2"/>
-                </FileInfo>
-            </File>
-        </ADC_FILE>
         <SDC_FILE>
             <File Path="HMC8.sdc">
                 <FileInfo>
@@ -184,6 +174,7 @@
         <Run Name="phy_1" Type="PhysicalDesign" ConstraintSet="constraint_1" Description="" SynRun="syn_1" Active="true">
             <Strategy Name="Default_PhysicalDesign_Strategy">
                 <BitgenProperty::GeneralOption>
+                    <bin>on</bin>
                     <unused_io_status>none</unused_io_status>
                 </BitgenProperty::GeneralOption>
                 <RouteProperty>

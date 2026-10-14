@@ -2,7 +2,7 @@ module HMC8 (
     clk,res,R_bus,W_bus,ADDR_bus,L,E,int_addr,out_int,SFR_wr,PC_out,
     L_ch,PC_CH,en
 );
-    parameter ip_sel=1;//1 altera 0 al
+    parameter ip_sel=0;//1 altera 0 al
     
     input clk,res;
     input out_int;//中断信号

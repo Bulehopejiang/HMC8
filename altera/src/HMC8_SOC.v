@@ -2,7 +2,7 @@ module HMC8_SOC (
     clk,res_n,out,TX,RX
 );
     localparam  i_num= 5;//中断源个数
-    parameter ip_sel=1;//1 altera 0 al
+    parameter ip_sel=0;//1 altera 0 al
 
     input clk,res_n;
     output [15:0] out;//输出寄存器端口
@@ -114,7 +114,7 @@ module HMC8_SOC (
         else if(L==1'b1&&SFR_wr==1'b1&&ADDR_bus==16'd3)
             SFR[3][4:0]<=W_bus[4:0];
     end
-	 
+
 
     /*  中断控制寄存器      地址：4
         总中断   中断更新
@@ -233,5 +233,6 @@ module HMC8_SOC (
         .L(L),.E(E),.int_addr(SFR[5]),.out_int(out_int),.SFR_wr(SFR_wr),.L_ch(L_ch),
         .PC_out(PC_out),.PC_CH(PC_CH),.en(en)
     );
+
 
 endmodule

@@ -31,6 +31,7 @@ module HMC8_SOC_tb (
     assign regs[13]=uut.HMC8_uut.Regs_uut.regs[13];
     assign regs[14]=uut.HMC8_uut.Regs_uut.regs[14];
     assign regs[15]=uut.HMC8_uut.Regs_uut.regs[15];
+    
 
     initial begin
         clk=0;
