@@ -1,0 +1,31 @@
+;串口回传
+NOP
+;为死循环做准备->R1=1
+LB LOW 1 R1
+;串口配置
+LB LOW @RT R0
+LSR 5 R0 ;装载跳转地址->SFR[5]=RT
+LB LOW 2 R0
+LSR 9 R0 ;开启串口接收使能->SFR[9]=2
+LB LOW 2 R0
+LSR 3 R0 ;接入串口接收中断源->SFR[3]=2
+LB LOW 3 R0
+LSR 4 R0 ;开启总中断->SFR[4]=3
+;死循环
+@LOOP
+JAL @LOOP R1
+NOP
+;串口接收中断函数
+@RT
+ESR 8 R3 ;将断点处PC保存
+ESR 11 R2 ;读取接收到的数据并存入R2寄存器->R2=SFR[11]
+NOP
+NOP
+LSR 10 R2 ;加载数据到串口发送区->SFR[10]=R2
+LB LOW 3 R0
+LSR 9 R0 ;开启串口接收与发送使能->SFR[9]=3
+LB LOW 0 R0
+LSR 2 R0 ;清除中断标志位->SFR[2]=0
+LB LOW 3 R0
+LSR 4 R0 ;更新中断->SFR[4]=3
+JALR R3 ;跳转回断点

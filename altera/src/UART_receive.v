@@ -1,3 +1,13 @@
+/*
+* UART_receive.v
+* clk:系统时钟,50MHz
+* reset:复位信号,低电平复位
+* en:接收使能信号,高电平使能
+* RXD:串口接收信号
+* RI:接收完成标志,高电平有效,保持一个周期
+* out:接收数据
+*/
+
 module UART_receive(clk,reset,en,RXD,RI,out);
 
 	parameter sys_clk=50_000_000;
