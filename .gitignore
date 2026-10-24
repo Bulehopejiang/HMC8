@@ -56,8 +56,6 @@ work/work/
 __pycache__/
 *.pyc
 *.pyo
-asm/HMC8汇编器/build/
-asm/HMC8汇编器/dist/
 
 # ---------- 备份与临时文件 ----------
 _repo_backup/
