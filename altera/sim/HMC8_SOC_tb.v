@@ -8,34 +8,30 @@ module HMC8_SOC_tb (
     wire Tx;
     reg Rx;
     wire [15:0] PC;
-    wire [15:0] R0,R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11,R12,R13,
-	 R14,R15;
-	 wire [15:0] SFR1;
-	 wire [15:0] SFR2;
+    wire [15:0] regs [0:15];
 
     HMC8_SOC uut(
         .clk(clk),.res_n(res),.out(out),.TX(Tx),.RX(Rx)
     );
 
     assign PC=uut.HMC8_uut.PC;
-    assign R0=uut.HMC8_uut.Regs_uut.regs[0];
-    assign R1=uut.HMC8_uut.Regs_uut.regs[1];
-    assign R2=uut.HMC8_uut.Regs_uut.regs[2];
-    assign R3=uut.HMC8_uut.Regs_uut.regs[3];
-    assign R4=uut.HMC8_uut.Regs_uut.regs[4];
-    assign R5=uut.HMC8_uut.Regs_uut.regs[5];
-    assign R6=uut.HMC8_uut.Regs_uut.regs[6];
-    assign R7=uut.HMC8_uut.Regs_uut.regs[7];
-    assign R8=uut.HMC8_uut.Regs_uut.regs[8];
-    assign R9=uut.HMC8_uut.Regs_uut.regs[9];
-    assign R10=uut.HMC8_uut.Regs_uut.regs[10];
-    assign R11=uut.HMC8_uut.Regs_uut.regs[11];
-    assign R12=uut.HMC8_uut.Regs_uut.regs[12];
-    assign R13=uut.HMC8_uut.Regs_uut.regs[13];
-    assign R14=uut.HMC8_uut.Regs_uut.regs[14];
-    assign R15=uut.HMC8_uut.Regs_uut.regs[15];
-    assign SFR1=uut.SFR[1];
-	 assign SFR2=uut.SFR[2];
+    assign regs[0]=uut.HMC8_uut.Regs_uut.regs[0];
+    assign regs[1]=uut.HMC8_uut.Regs_uut.regs[1];
+    assign regs[2]=uut.HMC8_uut.Regs_uut.regs[2];
+    assign regs[3]=uut.HMC8_uut.Regs_uut.regs[3];
+    assign regs[4]=uut.HMC8_uut.Regs_uut.regs[4];
+    assign regs[5]=uut.HMC8_uut.Regs_uut.regs[5];
+    assign regs[6]=uut.HMC8_uut.Regs_uut.regs[6];
+    assign regs[7]=uut.HMC8_uut.Regs_uut.regs[7];
+    assign regs[8]=uut.HMC8_uut.Regs_uut.regs[8];
+    assign regs[9]=uut.HMC8_uut.Regs_uut.regs[9];
+    assign regs[10]=uut.HMC8_uut.Regs_uut.regs[10];
+    assign regs[11]=uut.HMC8_uut.Regs_uut.regs[11];
+    assign regs[12]=uut.HMC8_uut.Regs_uut.regs[12];
+    assign regs[13]=uut.HMC8_uut.Regs_uut.regs[13];
+    assign regs[14]=uut.HMC8_uut.Regs_uut.regs[14];
+    assign regs[15]=uut.HMC8_uut.Regs_uut.regs[15];
+    
 
     initial begin
         clk=0;

@@ -85,15 +85,17 @@ module UART_send(clk,reset,en,TXD,TI,Data,busy);
 	always@(posedge clk or negedge reset)//位计数器
 		if(!reset)
 			bit_Count<=4'b0;
-		else if(Count+1'b1==Count_full)
-			bit_Count<=(bit_Count+1'b1>4'd11) ? 4'd0:bit_Count+1'b1;
 		else if(state==1'b0)
 			bit_Count<=4'b0;
+		else if(Count+1'b1==Count_full)
+			bit_Count<=(bit_Count+1'b1>4'd11) ? 4'd0:bit_Count+1'b1;
 	
 	always@(posedge clk or negedge reset)//波特率发生器
 		if(!reset)
 			Count<={W{1'b0}};
-		else if(Count_en)
+		else if(~Count_en)
+			Count<={W{1'b0}};
+		else
 			Count<=(Count>=Count_full) ? {W{1'b0}}:Count+1'b1;
 	
 endmodule 

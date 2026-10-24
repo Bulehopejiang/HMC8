@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Project Version="3" Minor="2" Path="E:/AL_project/HMC8/al/HMC8">
+<Project Version="3" Minor="2" Path="C:/Users/Lenovo/Desktop/HMC8/al/HMC8">
     <Project_Created_Time></Project_Created_Time>
     <TD_Version>5.6.119222</TD_Version>
     <Name>HMC8</Name>
@@ -114,7 +114,33 @@
                     <Attr Name="CompileOrder" Val="15"/>
                 </FileInfo>
             </File>
+            <File Path="../../altera/src/key.v">
+                <FileInfo>
+                    <Attr Name="UsedInSyn" Val="true"/>
+                    <Attr Name="UsedInP&R" Val="true"/>
+                    <Attr Name="BelongTo" Val="design_1"/>
+                    <Attr Name="CompileOrder" Val="16"/>
+                </FileInfo>
+            </File>
+            <File Path="../../altera/src/dig.v">
+                <FileInfo>
+                    <Attr Name="UsedInSyn" Val="true"/>
+                    <Attr Name="UsedInP&R" Val="true"/>
+                    <Attr Name="BelongTo" Val="design_1"/>
+                    <Attr Name="CompileOrder" Val="17"/>
+                </FileInfo>
+            </File>
         </Verilog>
+        <ADC_FILE>
+            <File Path="IO_pin.adc">
+                <FileInfo>
+                    <Attr Name="UsedInSyn" Val="true"/>
+                    <Attr Name="UsedInP&R" Val="true"/>
+                    <Attr Name="BelongTo" Val="constraint_1"/>
+                    <Attr Name="CompileOrder" Val="2"/>
+                </FileInfo>
+            </File>
+        </ADC_FILE>
         <SDC_FILE>
             <File Path="HMC8.sdc">
                 <FileInfo>

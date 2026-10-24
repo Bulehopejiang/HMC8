@@ -1,31 +1,111 @@
 ;串口回传
 NOP
-;为死循环做准备->R1=1
-LB LOW 1 R1
-;串口配置
-LB LOW @RT R0
-LSR 5 R0 ;装载跳转地址->SFR[5]=RT
-LB LOW 2 R0
-LSR 9 R0 ;开启串口接收使能->SFR[9]=2
-LB LOW 2 R0
-LSR 3 R0 ;接入串口接收中断源->SFR[3]=2
-LB LOW 3 R0
-LSR 4 R0 ;开启总中断->SFR[4]=3
-;死循环
-@LOOP
-JAL @LOOP R1
-NOP
-;串口接收中断函数
-@RT
-ESR 8 R3 ;将断点处PC保存
-ESR 11 R2 ;读取接收到的数据并存入R2寄存器->R2=SFR[11]
-NOP
-NOP
-LSR 10 R2 ;加载数据到串口发送区->SFR[10]=R2
-LB LOW 3 R0
-LSR 9 R0 ;开启串口接收与发送使能->SFR[9]=3
+;假值
 LB LOW 0 R0
-LSR 2 R0 ;清除中断标志位->SFR[2]=0
-LB LOW 3 R0
-LSR 4 R0 ;更新中断->SFR[4]=3
-JALR R3 ;跳转回断点
+;真值
+LB LOW 1 R1
+;FIFO大小
+LB LOW 1023 R13
+LB HIGH 1023 R13
+;FIFO接收指针
+LB LOW 0 R14
+;FIFO发送指针
+LB LOW 0 R15
+;串口配置
+;;装载中断入口地址
+LB LOW @RT R2
+LSR 5 R2
+;;开启串口接收使能
+LB LOW 2 R2
+LSR 9 R2
+;中断配置
+;;接入串口接收中断源
+LB LOW 2 R2
+LSR 3 R2
+;;开启总中断
+LB LOW 3 R2
+LSR 4 R2
+;主循环
+@LOOP
+;;判断FIFO非空: 发送指针 != 接收指针
+BNE R15 R14 R11
+NOP
+NOP
+JAL @BT R11
+@BT_BACK
+NOP
+JAL @LOOP R1
+;串口接收中断
+@RT
+;;保存断点
+ESR 8 R12
+;;读取接收数据到R4
+ESR 11 R4
+NOP
+NOP
+;;存入FIFO,接收指针直接作地址
+OUT R14 R4
+;;;;接收指针回绕
+;;判断是否到顶
+BEQ R14 R13 R10
+NOP
+NOP
+JAL @W14 R10
+;;没到顶则加1
+ADDI 1 R14 R14
+JAL @W14E R1
+@W14
+;;归零
+ANDI 0 R14 R14
+@W14E
+;;清除中断标志
+LB LOW 0 R2
+LSR 2 R2
+;;更新中断
+LB LOW 3 R2
+LSR 4 R2
+;;返回断点
+JALR R12
+;串口发送函数
+@BT
+;;;;等待上一帧发送完成
+@WAIT_BUSY
+;;读串口控制寄存器的busy位
+ESR 9 R8
+NOP
+NOP
+ANDI 4 R8 R8
+NOP
+NOP
+;;判断busy是否为0
+BEQ R8 R0 R11
+NOP
+NOP
+JAL @DO_SEND R11
+JAL @WAIT_BUSY R1
+@DO_SEND
+;;从FIFO取数据到R5,发送指针直接作地址
+IN R15 R5
+NOP
+NOP
+;;;;发送指针回绕
+;;判断是否到顶
+BEQ R15 R13 R11
+NOP
+NOP
+JAL @W15 R11
+;;没到顶则加1
+ADDI 1 R15 R15
+JAL @W15E R1
+@W15
+;;归零
+ANDI 0 R15 R15
+@W15E
+;;;;装载发送数据并启动发送
+;;FIFO数据直接作LSR的数据源
+LSR 10 R5
+;;启动发送,主循环专用R9
+LB LOW 3 R9
+LSR 9 R9
+;;返回主循环
+JAL @BT_BACK R1

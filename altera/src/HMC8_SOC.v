@@ -1,12 +1,12 @@
 module HMC8_SOC (
-    clk,res_n,out,TX,RX,PWM
+    clk,res_n,out,TX,RX,key_col,key_row,DigitronCS_Out,Digitron_Out
 );
-    localparam  i_num= 5;               //中断源个数
-    parameter ip_sel=1;                 //1 altera 0 al
+    localparam  i_num=6;                //中断源个数
+    parameter ip_sel=0;                 //1 altera 0 al
 
     input clk,res_n;
     output [15:0] out;                  //输出寄存器端口
-
+    
     reg resdff1,res;                    //异步复位信号打拍
     wire [15:0] R_bus,W_bus,ADDR_bus;   //写，读，地址总线
     wire L,E;                           //内存与特殊寄存器组加载使能与输出允许
@@ -22,18 +22,26 @@ module HMC8_SOC (
     wire en;                            //来自CPU的使能信号，由CPU控制
     reg i_reg;                          //中断寄存，用于与i配合组成一个边沿检测器
     wire [15:0] PC_CH;                  //用于中断捕获的PC信号
-    reg [15:0] IO [0:3];                //内存区（低速外设映射到此区域）
+    reg [15:0] IO [0:10];               //内存区（低速外设映射到此区域）
     reg [15:0] SFR [0:11];              //特殊寄存器区（此区域是紧耦合于CPU的，访问速度较快）
     //串口相关信号
     input RX;                           //串口发送端口
-    output TX;                           //串口接收端口
+    output TX;                          //串口接收端口
     wire UART0_busy;                    //UART0忙信号
     wire TI,RI;                         //UART0对应中断
     wire [7:0] Rx_data;                 //UART0接收到的数据
     //TIM相关信号
     wire TI0;                           //定时器0中断信号
-    //PWM相关信号
-    output PWM;                         //PWM输出端口
+    //key相关信号
+    input [3:0] key_col;                //按键列输入
+    output [3:0] key_row;               //按键行输出
+    wire [3:0] key_num;                 //按键值输出
+    wire KI;                            //按键中断信号
+    //dig相关信号
+    output [3:0] DigitronCS_Out;                //数码管位选输出
+    output [7:0] Digitron_Out;                  //数码管段选输出
+    wire [3:0] digit0,digit1,digit2,digit3;     //数码管显示数据
+    wire [3:0] dp;                              //数码管小数点显示数据
 
 	generate//RAM IP选择
         if(ip_sel)
@@ -68,7 +76,7 @@ module HMC8_SOC (
         res<=resdff1;
     end
 
-    //输出寄存器    地址：0
+    //输出寄存器    SFR地址：0
     always @(posedge clk or negedge res) begin//输出寄存器
         if(!res)
             SFR[0]<=16'b0;
@@ -77,7 +85,7 @@ module HMC8_SOC (
     end
     assign out=SFR[0];
 
-    //PC返回寄存器  地址：1
+    //PC返回寄存器  SFR地址：1
     always @(posedge clk or negedge res) begin//PC返回寄存器（执行JALR指令时PC值会捕获到此处）
         if(!res)
             SFR[1]<=16'b0;
@@ -92,24 +100,29 @@ module HMC8_SOC (
         if(!res)
             SFR[2]<=16'b0;
         else if(L==1'b1&&SFR_wr==1'b1&&ADDR_bus==16'd2)begin
+            SFR[2][5]<=(KI&SFR[3][5]) ? 1'b1:W_bus[5];//KI（按键）中断标志位
             SFR[2][4]<=(SFR[3][4]) ? W_bus[4]:1'b0;//S1中断标志位
             SFR[2][3]<=(SFR[3][3]) ? W_bus[3]:1'b0;//S0中断标志位
-            SFR[2][2]<=(TI0&SFR[3][2]) ? 1'b1:W_bus[2];//T0中断标志位
+            SFR[2][2]<=(TI0&SFR[3][2]) ? 1'b1:W_bus[2];//T0（定时器0）中断标志位
             SFR[2][1]<=(RI&SFR[3][1]) ? 1'b1:W_bus[1];//Uart0_Rx中断标志位
             SFR[2][0]<=(TI&SFR[3][0]) ? 1'b1:W_bus[0];//Uart0_Tx中断标志位
         end
         else begin
-            SFR[2][2]<=(TI0&SFR[3][2]) ? 1'b1:SFR[2][2];//T0中断标志位
+            SFR[2][5]<=(KI&SFR[3][5]) ? 1'b1:SFR[2][5];//KI（按键）中断标志位
+            SFR[2][2]<=(TI0&SFR[3][2]) ? 1'b1:SFR[2][2];//T0（定时器0）中断标志位
             SFR[2][1]<=(RI&SFR[3][1]) ? 1'b1:SFR[2][1];//Uart0_Rx中断标志位
             SFR[2][0]<=(TI&SFR[3][0]) ? 1'b1:SFR[2][0];//Uart0_Tx中断标志位
         end
     end
 	assign I=SFR[2];//送往中断边沿检测器
 
-    /*  中断源使能寄存器    地址：3
-        软中断1  软中断0 T0中断   UART0接收中断   UART0发送中断
-        4       3       2       1               0
-        S1      S0      T0      Rx0             Tx0
+    /*  中断源使能寄存器    SFR地址：3
+        KI中断          5   KI
+        软中断1         4   S1
+        软中断0         3   S0
+        T0中断          2   T0
+        UART0接收中断   1   Rx0
+        UART0发送中断   0   Tx0
     */
     always @(posedge clk or negedge res) begin//各中断源使能寄存器
         if(!res)
@@ -118,7 +131,7 @@ module HMC8_SOC (
             SFR[3][i_num-1'b1:0]<=W_bus[i_num-1'b1:0];
     end
 
-    /*  中断控制寄存器      地址：4
+    /*  中断控制寄存器      SFR地址：4
         总中断   中断更新
         1        0
         IF       RF
@@ -134,7 +147,7 @@ module HMC8_SOC (
     assign IF=SFR[4][1];//总中断使能
     assign i_reg_clr=SFR[4][0];//中断更新信号
 
-    //中断服务函数地址寄存器    地址：5
+    //中断服务函数地址寄存器    SFR地址：5
     always @(posedge clk or negedge res) begin//中断服务函数地址寄存器
         if(!res)
             SFR[5]<=16'b0;
@@ -150,10 +163,11 @@ module HMC8_SOC (
         .clr_cnt(SFR[6][0]),.TI(TI0)
     );
 
-    /*  T0控制寄存器    地址：6
-        溢出信号     分频系数               使能     清0
-        4           3   2                    1      0
-        TI0    分频系数（0默认不分频）        TR0    clr0
+    /*  T0控制寄存器    SFR地址：6
+        溢出信号    4       TI0
+        分频系数    3 2     分频系数（0默认不分频）           
+        使能        1       TR0
+        清0         0       clr0
     */
     always @(posedge clk or negedge res) begin//T0控制寄存器
         if(!res)
@@ -165,7 +179,7 @@ module HMC8_SOC (
         end
     end
 
-    //T0阈值寄存器  地址：7
+    //T0阈值寄存器  SFR地址：7
     always @(posedge clk or negedge res) begin//T0阈值寄存器（T0记到此值后自动清零并触发中断）
         if(!res)
             SFR[7]<=16'b0;
@@ -174,7 +188,7 @@ module HMC8_SOC (
     end
     //**************************TIM******************************
 
-    //中断PC捕获寄存器  地址：8
+    //中断PC捕获寄存器  SFR地址：8
     always @(posedge clk or negedge res) begin//中断PC捕获寄存器（中断被触发后，PC值捕获到此处）
         if(!res)
             SFR[8]<=16'b0;
@@ -189,10 +203,10 @@ module HMC8_SOC (
     UART_send Send_uut(.clk(clk),.reset(res),.en(SFR[9][0]),.TXD(TX),.TI(TI),.Data(SFR[10][7:0]),.busy(UART0_busy));
     UART_receive receive_uut(.clk(clk),.reset(res),.en(SFR[9][1]),.RXD(RX),.RI(RI),.out(Rx_data));
 
-    /*  URAT0控制寄存器     地址：9
-        发送忙           接收使能    发送使能
-        2               1           0
-        UART0_busy      ER0         ET0
+    /*  URAT0控制寄存器     SFR地址：9
+        发送忙      2       UART0_busy       
+        接收使能    1       ER0 
+        发送使能    0       ET0
     */
     //发送使能置位后硬件自动清0，再次发送需要软件置位
     always @(posedge clk or negedge res) begin//URAT0控制寄存器
@@ -208,7 +222,7 @@ module HMC8_SOC (
 		end
     end
 
-    //TX寄存器  地址：10
+    //TX寄存器  SFR地址：10
     always @(posedge clk or negedge res) begin//TX寄存器
         if(!res)
             SFR[10]<=16'b0;
@@ -224,7 +238,7 @@ module HMC8_SOC (
             RI_reg<=RI;
     end
 
-    //RX寄存器  地址：11
+    //RX寄存器  SFR地址：11
     always @(posedge clk or negedge res) begin//RX寄存器
         if(!res)
             SFR[11]<=16'b0;
@@ -235,41 +249,82 @@ module HMC8_SOC (
     end
     //**************************UART******************************
 
-    //**************************PWM******************************
-    pwm pwm0(.clk(clk),.rst_n(res),.freq_div(IO[0]),.duty(IO[1]),.cnt(IO[2]),.en(IO[3][0]),.pwm_out(PWM));
+    //**************************key******************************
+    key key0(.clk(clk),.rst_n(res),.en(IO[0][0]),.key_row(key_row),.key_col(key_col),.KI(KI),.key_num(key_num));
 
-    //PWM频率寄存器  地址：IO0
-    always @(posedge clk or negedge res) begin//PWM频率寄存器
+    //按键使能寄存器  IO地址：0
+    always @(posedge clk or negedge res) begin
         if(!res)
             IO[0]<=16'b0;
         else if(L==1'b1&&SFR_wr==1'b0&&ADDR_bus==16'd2048)
-            IO[0]<=W_bus;
+            IO[0][0]<=W_bus[0];
     end
 
-    //PWM占空比寄存器  地址：IO1
-    always @(posedge clk or negedge res) begin//PWM占空比寄存器
+    //按键键值寄存器  IO地址：1
+    always @(posedge clk or negedge res) begin
         if(!res)
             IO[1]<=16'b0;
+        else if(KI)
+            IO[1][3:0]<=key_num[3:0];
         else if(L==1'b1&&SFR_wr==1'b0&&ADDR_bus==16'd2049)
-            IO[1]<=W_bus;
+            IO[1][3:0]<=W_bus[3:0];
     end
 
-    //PWM计数阈值寄存器  地址：IO2
-    always @(posedge clk or negedge res) begin//PWM计数阈值寄存器
+    //**************************key******************************
+
+    //**************************dig******************************
+
+    dig dig0(.clk(clk),.rst_n(res),.en(IO[7][0]),.digit0(IO[2][3:0]),.digit1(IO[3][3:0]),.digit2(IO[4][3:0]),.digit3(IO[5][3:0]),
+    .dp(IO[6][3:0]),.DigitronCS_Out(DigitronCS_Out),.Digitron_Out(Digitron_Out));
+
+    //数码管0数据寄存器  IO地址：2
+    always @(posedge clk or negedge res) begin
         if(!res)
             IO[2]<=16'b0;
         else if(L==1'b1&&SFR_wr==1'b0&&ADDR_bus==16'd2050)
-            IO[2]<=W_bus;
+            IO[2][3:0]<=W_bus[3:0];
     end
 
-    //PWM使能寄存器  地址：IO3
-    always @(posedge clk or negedge res) begin//PWM使能寄存器
+    //数码管1数据寄存器  IO地址：3
+    always @(posedge clk or negedge res) begin
         if(!res)
             IO[3]<=16'b0;
         else if(L==1'b1&&SFR_wr==1'b0&&ADDR_bus==16'd2051)
-            IO[3][0]<=W_bus[0];
+            IO[3][3:0]<=W_bus[3:0];
     end
-    //**************************PWM******************************
+
+    //数码管2数据寄存器  IO地址：4
+    always @(posedge clk or negedge res) begin
+        if(!res)
+            IO[4]<=16'b0;
+        else if(L==1'b1&&SFR_wr==1'b0&&ADDR_bus==16'd2052)
+            IO[4][3:0]<=W_bus[3:0];
+    end
+
+    //数码管3数据寄存器  IO地址：5
+    always @(posedge clk or negedge res) begin
+        if(!res)
+            IO[5]<=16'b0;
+        else if(L==1'b1&&SFR_wr==1'b0&&ADDR_bus==16'd2053)
+            IO[5][3:0]<=W_bus[3:0];
+    end
+
+    //数码管小数点数据寄存器  IO地址：6
+    always @(posedge clk or negedge res) begin
+        if(!res)
+            IO[6]<=16'b0;
+        else if(L==1'b1&&SFR_wr==1'b0&&ADDR_bus==16'd2054)
+            IO[6][3:0]<=W_bus[3:0];
+    end
+
+    //数码管使能寄存器  IO地址：7
+    always @(posedge clk or negedge res) begin
+        if(!res)
+            IO[7]<=16'b0;
+        else if(L==1'b1&&SFR_wr==1'b0&&ADDR_bus==16'd2055)
+            IO[7][0]<=W_bus[0];
+    end
+    //**************************dig******************************
 
     HMC8 #(ip_sel)HMC8_uut(//HMC8 RISC CPU
         .clk(clk),.res(res),.R_bus(R_bus),.W_bus(W_bus),.ADDR_bus(ADDR_bus),

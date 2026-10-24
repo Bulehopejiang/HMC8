@@ -1,0 +1,116 @@
+;一个临时文件
+NOP
+;为死循环做准备->R1=1
+LB LOW 1 R1
+;为键值判断做准备->R5=10
+LB LOW 10 R5
+;密码->R9=2006(BCD)
+LB LOW 8198 R9
+LB HIGH 8198 R9
+;装载中断跳转地址->SFR[5]=KT
+LB LOW @KT R0
+LB HIGH @KT R0
+LSR 5 R0
+;按键配置
+;;开启按键使能->IO[0]=1
+LB LOW 2048 R0
+LB HIGH 2048 R0
+LB LOW 1 R2
+NOP
+NOP
+OUT R0 R2
+;数码管配置
+;;开启数码管使能
+LB LOW 2055 R0
+LB HIGH 2055 R0
+LB LOW 1 R2
+NOP
+NOP
+OUT R0 R2 ;数码管数据->IO[7]=1
+;中断配置
+;;接入按键中断源->SFR[3]=32
+LB LOW 32 R0
+LSR 3 R0
+;;开启总中断->SFR[4]=3
+LB LOW 3 R0
+LSR 4 R0
+;死循环
+@LOOP
+JAL @LOOP R1
+NOP
+;按键中断函数
+@KT
+;;将断点处PC保存->R3=SFR[8]
+ESR 8 R3
+;;中断函数实现代码
+;;;读取键值->R2=IO[1]
+LB LOW 2049 R0
+LB HIGH 2049 R0
+NOP
+NOP
+IN R0 R2
+;;;判断键值
+;;;;键值小于10->R7=[R2(键值)<R5(10)]
+NOP
+NOP
+BLTU R2 R5 R7
+NOP
+NOP
+JAL @LT R7
+@LT_BACK
+;;;;键值等于10->R3=[R2(键值)==R5(10)]
+BEQ R2 R5 R7
+NOP
+NOP
+JAL @EQ R7
+@EQ_BACK
+;;;将R4的数据打印到数码管上
+;;;;第1个数码管->R6=R4>>12,IO[2]=R6
+LB LOW 2050 R0
+LB HIGH 2050 R0
+SRLI 12 R4 R6
+NOP
+NOP
+OUT R0 R6
+;;;;第2个数码管->R6=R4>>8,IO[3]=R6
+LB LOW 2051 R0
+LB HIGH 2051 R0
+SRLI 8 R4 R6
+NOP
+NOP
+OUT R0 R6
+;;;;第3个数码管->R6=R4>>4,IO[4]=R6
+LB LOW 2052 R0
+LB HIGH 2052 R0
+SRLI 4 R4 R6
+NOP
+NOP
+OUT R0 R6
+;;;;第4个数码管->R6=R4>>0,IO[5]=R6
+LB LOW 2053 R0
+LB HIGH 2053 R0
+SRLI 0 R4 R6
+NOP
+NOP
+OUT R0 R6
+;;清除中断标志位->SFR[2]=0
+LB LOW 0 R0
+LSR 2 R0
+;;更新中断->SFR[4]=3
+LB LOW 3 R0
+LSR 4 R0
+;;跳转回断点
+JALR R3
+;键值小于10处理函数
+@LT
+;;中断函数实现代码->R4=(R4<<4)|R2
+SLLI 4 R4 R4
+OR R2 R4 R4
+;;跳转回断点
+JAL @LT_BACK R1
+;键值等于10处理函数
+@EQ
+;;中断函数实现代码->R4=(R9==R4)
+BEQ R4 R9 R4
+;;跳转回断点
+JAL @EQ_BACK R1

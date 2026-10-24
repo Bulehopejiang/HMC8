@@ -1,0 +1,243 @@
+;串口命令解析 修复发送被打断版
+;上一版 led 已经成功(bit1,3,5,7亮),但 hello 回传少了第一个字母 h.
+;原因:启动发送<LSR 9 R9>之后立刻读busy,此时busy还没变成1,
+;      误判为空闲,立刻再启动发送,把正在发的帧打断了.
+;修复:在三处等busy的入口各加2条NOP,让busy先稳定为1再判断.
+;诊断含义:
+;  上电        -> 低8位亮 0x00FF
+;  led命令成功 -> 0x00AA 即bit1,3,5,7
+;  失败        -> LED显示首字节R5
+NOP
+;常量
+LB LOW 0 R0
+LB LOW 1 R1
+LB LOW 59 R6
+;标志和指针清零
+ANDI 0 R7 R7
+ANDI 0 R14 R14
+;命令缓冲上限
+LB LOW 1023 R13
+LB HIGH 1023 R13
+;中断入口
+LB LOW @RT R2
+LSR 5 R2
+;串口接收使能
+LB LOW 2 R2
+LSR 9 R2
+;接收中断使能
+LB LOW 2 R2
+LSR 3 R2
+;总中断使能
+LB LOW 3 R2
+LSR 4 R2
+;诊断:点亮低8位
+LB LOW 255 R9
+NOP
+NOP
+LSR 0 R9
+;主循环
+@LOOP
+;;判断命令是否就绪
+BNE R7 R0 R11
+NOP
+NOP
+JAL @PARSE R11
+JAL @LOOP R1
+;命令解析
+@PARSE
+;;IN连续两次,第二次才读到RAM[0]的正确值
+IN R0 R5
+NOP
+NOP
+IN R0 R5
+NOP
+NOP
+;;长度等于4则检查led
+LB LOW 4 R9
+NOP
+NOP
+BEQ R14 R9 R11
+NOP
+NOP
+JAL @CHK_LED R11
+;;长度等于6则检查hello
+LB LOW 6 R9
+NOP
+NOP
+BEQ R14 R9 R11
+NOP
+NOP
+JAL @CHK_HELLO R11
+;;都不匹配则显示首字节后结束
+JAL @PEND R1
+;检查led命令
+@CHK_LED
+;;首字节等于108 即 l ?
+LB LOW 108 R9
+NOP
+NOP
+BEQ R5 R9 R11
+NOP
+NOP
+JAL @DO_LED R11
+JAL @PEND R1
+;执行led命令,成功显示0x00AA
+@DO_LED
+LB LOW 170 R9
+NOP
+NOP
+LSR 0 R9
+JAL @PENDOK R1
+;检查hello命令
+@CHK_HELLO
+;;首字节等于104 即 h ?
+LB LOW 104 R9
+NOP
+NOP
+BEQ R5 R9 R11
+NOP
+NOP
+JAL @DO_HELLO R11
+JAL @PEND R1
+;执行hello命令,回传 hi!
+@DO_HELLO
+;;;;发送 h 即 104
+@WB1
+;;等busy前先空2拍,避免误判
+NOP
+NOP
+ESR 9 R8
+NOP
+NOP
+ANDI 4 R8 R8
+NOP
+NOP
+BEQ R8 R0 R11
+NOP
+NOP
+JAL @S1 R11
+JAL @WB1 R1
+@S1
+LB LOW 104 R9
+NOP
+NOP
+LSR 10 R9
+LB LOW 3 R9
+LSR 9 R9
+;;;;发送 i 即 105
+@WB2
+;;等busy前先空2拍,避免误判
+NOP
+NOP
+ESR 9 R8
+NOP
+NOP
+ANDI 4 R8 R8
+NOP
+NOP
+BEQ R8 R0 R11
+NOP
+NOP
+JAL @S2 R11
+JAL @WB2 R1
+@S2
+LB LOW 105 R9
+NOP
+NOP
+LSR 10 R9
+LB LOW 3 R9
+LSR 9 R9
+;;;;发送感叹号 即33
+@WB3
+;;等busy前先空2拍,避免误判
+NOP
+NOP
+ESR 9 R8
+NOP
+NOP
+ANDI 4 R8 R8
+NOP
+NOP
+BEQ R8 R0 R11
+NOP
+NOP
+JAL @S3 R11
+JAL @WB3 R1
+@S3
+LB LOW 33 R9
+NOP
+NOP
+LSR 10 R9
+LB LOW 3 R9
+LSR 9 R9
+JAL @PENDOK R1
+;成功路径:不动LED
+@PENDOK
+ANDI 0 R7 R7
+ANDI 0 R14 R14
+JAL @LOOP R1
+;失败路径:显示首字节R5
+@PEND
+LSR 0 R5
+ANDI 0 R7 R7
+ANDI 0 R14 R14
+JAL @LOOP R1
+;串口接收中断
+@RT
+;;保存断点
+ESR 8 R12
+;;读接收数据
+ESR 11 R4
+NOP
+NOP
+;;;;丢弃值为0的字节
+BEQ R4 R0 R10
+NOP
+NOP
+JAL @RTBODY R10
+;;;;丢弃回车13
+ANDI 0 R2 R2
+LB LOW 13 R2
+NOP
+NOP
+BEQ R4 R2 R10
+NOP
+NOP
+JAL @RTBODY R10
+;;;;丢弃换行10
+ANDI 0 R2 R2
+LB LOW 10 R2
+NOP
+NOP
+BEQ R4 R2 R10
+NOP
+NOP
+JAL @RTBODY R10
+;;;;存入命令缓冲,OUT连续两次,第二次才写到正确地址
+OUT R14 R4
+OUT R14 R4
+;;;;写指针回绕判断
+BEQ R14 R13 R10
+NOP
+NOP
+JAL @W14 R10
+ADDI 1 R14 R14
+JAL @W14E R1
+@W14
+ANDI 0 R14 R14
+@W14E
+;;;;判断是否结束符
+BEQ R4 R6 R10
+NOP
+NOP
+JAL @SETRDY R10
+JAL @RTBODY R1
+@SETRDY
+LB LOW 1 R7
+;;;;清除中断标志并返回
+@RTBODY
+LB LOW 0 R2
+LSR 2 R2
+LB LOW 3 R2
+LSR 4 R2
+JALR R12

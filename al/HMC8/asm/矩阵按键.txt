@@ -1,0 +1,42 @@
+;矩阵按键
+NOP
+;为死循环做准备->R1=1
+LB LOW 1 R1
+;按键配置
+LB LOW @KT R0
+LB HIGH @KT R0
+LSR 5 R0 ;装载跳转地址->SFR[5]=KT
+LB LOW 2048 R0
+LB HIGH 2048 R0 ;R0=2048
+LB LOW 1 R2
+NOP
+NOP
+OUT R0 R2 ;开启按键使能->IO[0]=1
+LB LOW 32 R0
+LSR 3 R0 ;接入按键中断源->SFR[3]=32
+LB LOW 3 R0
+LSR 4 R0 ;开启总中断->SFR[4]=3
+;死循环
+@LOOP
+JAL @LOOP R1
+NOP
+;按键中断函数
+@KT
+ESR 8 R3 ;将断点处PC保存->R3=SFR[8]
+;中断函数实现代码
+LB LOW 2049 R0
+LB HIGH 2049 R0 ;R0=2049
+NOP
+NOP
+IN R0 R2 ;读取键值->R2=IO[1]
+NOP
+NOP
+LSR 10 R2 ;加载HEX数据到串口发送区->SFR[10]=R2(键值数据)
+LB LOW 1 R0
+LSR 9 R0 ;开启串口发送使能->SFR[9]=1
+LB LOW 0 R0
+;空
+LSR 2 R0 ;清除中断标志位->SFR[2]=0
+LB LOW 3 R0
+LSR 4 R0 ;更新中断->SFR[4]=3
+JALR R3 ;跳转回断点
