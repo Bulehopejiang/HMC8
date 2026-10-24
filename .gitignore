@@ -1,0 +1,66 @@
+# ============================================================
+# HMC8 仓库忽略规则
+# 原则：仓库只保存源码、工程配置与文档；
+#       可再生的构建产物、体积过大的参考资料一律不入库。
+# ============================================================
+
+# ---------- 大体积 / 版权资料 ----------
+doc/riscv/*.pdf
+doc/riscv/*.zip
+doc/riscv/*.rar
+doc/riscv/*.7z
+
+# ---------- Quartus 构建产物 ----------
+# altera/ 工程：数据库、综合与布局布线输出、门级仿真网表
+altera/db/
+altera/incremental_db/
+altera/greybox_tmp/
+altera/output_files/
+altera/simulation/
+# al/HMC8 工程：HMC8_Runs 是一次完整编译的全部输出
+al/HMC8/HMC8_Runs/
+al/HMC8/td_*.log
+
+# Quartus 通用中间文件、报告、网表
+*.qdb
+*.qpg
+*.qtl
+*.ddb
+*.cdb
+*.hdb
+*.tdb
+*.hsd
+*.rcfdb
+*.smsg
+*.qmsg
+*.xrf
+*.hif
+*.sdo
+*.vo
+*.sdf
+*.sof
+*.pof
+*.bit
+*.jdi
+*.vcd
+*.wlf
+*_nativelink_simulation.rpt
+
+# ---------- Questa / ModelSim 编译输出 ----------
+rtl_work/
+*/rtl_work/
+transcript
+work/work/
+
+# ---------- Python / PyInstaller ----------
+__pycache__/
+*.pyc
+*.pyo
+asm/HMC8汇编器/build/
+asm/HMC8汇编器/dist/
+
+# ---------- 备份与临时文件 ----------
+_repo_backup/
+*.bundle
+Thumbs.db
+desktop.ini
