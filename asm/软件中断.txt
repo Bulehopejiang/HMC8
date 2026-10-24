@@ -1,0 +1,26 @@
+NOP
+LB LOW @SOFTINT R0；
+LB LOW 1 R1；为大循环做准备
+LB LOW 8 R4；R4预先装载，为后续软件触发做准备
+LSR 5 R0；装载中断服务程序地址
+LB LOW 8 R0；R0预先装载为开启软件中断做准备
+LB LOW 3 R6；R6预装载为更新中断做准备
+NOP
+LSR 3 R0；开启软件中断标志位
+LB LOW 2 R0；R0预装载，为开启总中断作准备
+NOP
+NOP
+LSR 4 R0；开启总中断
+@LOOP
+LSR 2 R4；触发软件中断
+LSR 0 R5；清零输出
+JAL @LOOP R1；死循环
+NOP
+@SOFTINT
+；软件中断
+LB LOW 66 R2；R2装载66
+ESR 8 R0；将断点返回值装入R0
+LSR 2 R3；将软件中断标志位清零
+LSR 0 R2；将R2输出
+LSR 4 R6；更新中断
+JALR R0；跳回断点

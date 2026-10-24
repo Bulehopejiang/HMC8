@@ -1,0 +1,21 @@
+NOP
+LB LOW 1 R1；R1装载1为后面的死循环做准备
+LB LOW @SONFUN R0；将子程序地址装入R0
+LB LOW 66 R2；R2装载66
+LSR 0 R2；将R2的值转载进输出寄存器
+JALR R0；跳转到子程序
+ADDI 1 R2 R2；R2++
+LSR 0 R2；将R2的值装入输出寄存器
+ADDI 1 R2 R2；R2++
+LSR 0 R2；将R2的值装入输出寄存器
+@LOOP
+JAL @LOOP R1；死循环
+NOP
+@SONFUN
+；子程序，R2++后输出
+ADDI 1 R2 R2；R2++
+LSR 0 R2；将R2装入输出寄存器
+ESR 1 R0；将子程序返回寄存器的值装载入R0
+NOP
+NOP
+JALR R0；跳回主程序
