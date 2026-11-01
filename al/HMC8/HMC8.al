@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Project Version="3" Minor="2" Path="C:/Users/Lenovo/Desktop/HMC8/al/HMC8">
+<Project Version="3" Minor="2" Path="E:/AL_project/HMC8/al/HMC8">
     <Project_Created_Time></Project_Created_Time>
     <TD_Version>5.6.119222</TD_Version>
     <Name>HMC8</Name>
