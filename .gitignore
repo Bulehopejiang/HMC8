@@ -1,14 +1,27 @@
 # ============================================================
 # HMC8 仓库忽略规则
-# 原则：仓库只保存源码、工程配置与文档；
-#       可再生的构建产物、体积过大的参考资料一律不入库。
+#
+# 原则：仓库只保存「源码 + 工程配置 + 文档」，
+#       可再生的构建产物、IDE 状态、备份文件与大体积资料一律不入库。
+# 说明：提交历史已按本文件规则清理过一次，
+#       若发现仍有产物被跟踪，用 git rm -r --cached <路径> 移出即可。
+#
+# 注意：.gitignore 不支持行内注释，# 只能出现在行首。
 # ============================================================
 
 # ---------- 大体积 / 版权资料 ----------
+# doc/riscv 下只保留整理完成的说明文档，规范原文与抽取件不入库
 doc/riscv/*.pdf
 doc/riscv/*.zip
 doc/riscv/*.rar
 doc/riscv/*.7z
+doc/riscv/spec_fulltext.txt
+doc/**/*.ppt
+# 作品报告以 PDF 入库，二进制原件 docx 不入库
+doc/**/*.docx
+
+# ---------- 参考资料整理的中间脚本与碎片 ----------
+doc/riscv/_*
 
 # ---------- Quartus 构建产物 ----------
 # altera/ 工程：数据库、综合与布局布线输出、门级仿真网表
@@ -20,6 +33,8 @@ altera/simulation/
 # al/HMC8 工程：HMC8_Runs 是一次完整编译的全部输出
 al/HMC8/HMC8_Runs/
 al/HMC8/td_*.log
+# Quartus 工作区状态文件
+altera/HMC8.qws
 
 # Quartus 通用中间文件、报告、网表
 *.qdb
@@ -46,6 +61,22 @@ al/HMC8/td_*.log
 *.wlf
 *_nativelink_simulation.rpt
 
+# ---------- 平台工具生成的中间文件 ----------
+# 手工备份文件，不入库
+*.bak
+# 安路 TD 为 MIF 生成的附属文件
+al/HMC8/al_PROM.mif.dat
+# rtl_sim.do 运行时由 al_PROM.mif 自动转换得到
+al/HMC8/sim/al_PROM.hex
+# 汇编例程临时草稿
+al/HMC8/asm/temp.txt
+
+# ---------- 已废弃的工作区 ----------
+# 早期 Python ISS 试验台，其引用的 tb_commit.v、asm.py、iss.py 已不存在
+verify/
+# 更早期的回归仿真脚本残留
+sim_regress/
+
 # ---------- Questa / ModelSim 编译输出 ----------
 rtl_work/
 */rtl_work/
@@ -53,9 +84,18 @@ transcript
 work/work/
 
 # ---------- Python / PyInstaller ----------
+.venv/
 __pycache__/
 *.pyc
 *.pyo
+# PyInstaller 打包中间产物
+build/
+# PyInstaller 生成的 exe
+dist/
+
+# ---------- IDE 配置 ----------
+.idea/
+*.iml
 
 # ---------- 备份与临时文件 ----------
 _repo_backup/
